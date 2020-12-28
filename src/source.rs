@@ -2,7 +2,7 @@ use chrono::prelude::*;
 use std::collections::HashMap;
 
 // Price entity related to a SKU
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PriceObject {
   net_price: u32,
   comment: String,
@@ -26,6 +26,7 @@ where
 
 // This represents a source as an entity
 // Business data + SKU price list
+#[derive(Debug)]
 pub struct Source {
   id: u32,
   data: SourceData,
@@ -82,9 +83,22 @@ where
     }
     None
   }
+  /// Get sku list available
+  pub fn get_skus(&self) -> Vec<&u32> {
+    self.prices.iter().map(|(sku, _)| sku).collect()
+  }
+  /// Get price list (SKU, Option<&PriceObject>)
+  pub fn get_price_list(&self) -> Vec<(&u32, Option<&PriceObject>)> {
+    self
+      .prices
+      .iter()
+      .map(|(sku, prices)| (sku, prices.last()))
+      .collect()
+  }
 }
 
 // This represents a source business data
+#[derive(Debug)]
 pub struct SourceData {
   name: String,
   address: String,
