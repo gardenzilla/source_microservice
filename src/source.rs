@@ -6,10 +6,10 @@ use std::collections::HashMap;
 // Price entity related to a SKU
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PriceObject {
-  net_price: u32,
-  comment: String,
-  created_at: DateTime<Utc>,
-  created_by: String,
+  pub net_price: u32,
+  pub comment: String,
+  pub created_at: DateTime<Utc>,
+  pub created_by: String,
 }
 
 impl Default for PriceObject {
