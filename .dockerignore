@@ -1,0 +1,4 @@
+data/
+target/
+!target/release/source_microservice
+Cargo.lock

@@ -1,13 +1,26 @@
 use chrono::prelude::*;
+use packman::VecPackMember;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // Price entity related to a SKU
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PriceObject {
   net_price: u32,
   comment: String,
   created_at: DateTime<Utc>,
   created_by: String,
+}
+
+impl Default for PriceObject {
+  fn default() -> Self {
+    Self {
+      net_price: 0,
+      comment: "".into(),
+      created_at: Utc::now(),
+      created_by: "".into(),
+    }
+  }
 }
 
 impl PriceObject
@@ -26,13 +39,25 @@ where
 
 // This represents a source as an entity
 // Business data + SKU price list
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Source {
-  id: u32,
-  data: SourceData,
-  prices: HashMap<u32, Vec<PriceObject>>,
-  created_by: String,
-  created_at: DateTime<Utc>,
+  pub id: u32,
+  pub data: SourceData,
+  pub prices: HashMap<u32, Vec<PriceObject>>,
+  pub created_by: String,
+  pub created_at: DateTime<Utc>,
+}
+
+impl Default for Source {
+  fn default() -> Self {
+    Self {
+      id: 0,
+      data: SourceData::default(),
+      prices: HashMap::new(),
+      created_by: "".into(),
+      created_at: Utc::now(),
+    }
+  }
 }
 
 impl Source
@@ -97,13 +122,21 @@ where
   }
 }
 
+impl VecPackMember for Source {
+  type Out = u32;
+
+  fn get_id(&self) -> &Self::Out {
+    &self.id
+  }
+}
+
 // This represents a source business data
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SourceData {
-  name: String,
-  address: String,
-  email: Vec<String>,
-  phone: Vec<String>,
+  pub name: String,
+  pub address: String,
+  pub email: Vec<String>,
+  pub phone: Vec<String>,
 }
 
 impl SourceData
