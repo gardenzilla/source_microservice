@@ -108,18 +108,18 @@ where
     }
     None
   }
-  /// Get sku list available
-  pub fn get_skus(&self) -> Vec<&u32> {
-    self.prices.iter().map(|(sku, _)| sku).collect()
-  }
-  /// Get price list (SKU, Option<&PriceObject>)
-  pub fn get_price_list(&self) -> Vec<(&u32, Option<&PriceObject>)> {
-    self
-      .prices
-      .iter()
-      .map(|(sku, prices)| (sku, prices.last()))
-      .collect()
-  }
+  // /// Get sku list available
+  // pub fn get_skus(&self) -> Vec<&u32> {
+  //   self.prices.iter().map(|(sku, _)| sku).collect()
+  // }
+  // /// Get price list (SKU, Option<&PriceObject>)
+  // pub fn get_price_list(&self) -> Vec<(&u32, Option<&PriceObject>)> {
+  //   self
+  //     .prices
+  //     .iter()
+  //     .map(|(sku, prices)| (sku, prices.last()))
+  //     .collect()
+  // }
 }
 
 impl VecPackMember for Source {

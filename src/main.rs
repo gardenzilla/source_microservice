@@ -1,10 +1,8 @@
-use gzlib::prelude::*;
 use gzlib::proto::source::source_server::*;
 use gzlib::proto::source::*;
 use packman::*;
 use prelude::{ServiceError, ServiceResult};
-use source_server::Source;
-use std::{collections::HashMap, env, path::PathBuf};
+use std::{env, path::PathBuf};
 use tokio::sync::{oneshot, Mutex};
 use tonic::{transport::Server, Request, Response, Status};
 
@@ -163,10 +161,7 @@ impl SourceService {
     Ok(res)
   }
 
-  async fn add_price_info(
-    &self,
-    r: AddPriceInfoRequest,
-  ) -> ServiceResult<GetPriceInfoHistoryResponse> {
+  async fn add_price_info(&self, r: AddPriceInfoRequest) -> ServiceResult<Vec<PriceObject>> {
     let res = self
       .sources
       .lock()
@@ -193,11 +188,59 @@ impl SourceService {
       })
       .collect::<Vec<PriceObject>>();
 
-    Ok(GetPriceInfoHistoryResponse {
-      source_id: r.source_id,
-      sku: r.sku,
-      latest_price: res,
-    })
+    Ok(res)
+  }
+
+  async fn get_price_info(
+    &self,
+    r: GetPriceInfoRequest,
+  ) -> ServiceResult<Vec<GetPriceInfoResponse>> {
+    let mut res: Vec<GetPriceInfoResponse> = Vec::new();
+    self.sources.lock().await.iter().for_each(|s| {
+      let s = s.unpack();
+      if let Some(price) = s.get_price(r.sku) {
+        res.push(GetPriceInfoResponse {
+          source_id: s.id,
+          sku: r.sku,
+          latest_price: Some(PriceObject {
+            net_price: price.net_price,
+            comment: price.comment.to_owned(),
+            created_at: price.created_at.to_rfc3339(),
+            created_by: price.created_by.to_owned(),
+          }),
+        });
+      }
+    });
+    Ok(res)
+  }
+
+  async fn get_price_info_history(
+    &self,
+    r: GetPriceInfoHistoryRequest,
+  ) -> ServiceResult<Vec<PriceObject>> {
+    match self
+      .sources
+      .lock()
+      .await
+      .find_id(&r.source)?
+      .unpack()
+      .prices
+      .get(&r.sku)
+    {
+      Some(prices) => {
+        let res = prices
+          .iter()
+          .map(|p| PriceObject {
+            net_price: p.net_price,
+            comment: p.comment.to_owned(),
+            created_at: p.created_at.to_rfc3339(),
+            created_by: p.created_by.to_owned(),
+          })
+          .collect::<Vec<PriceObject>>();
+        Ok(res)
+      }
+      None => Err(ServiceError::not_found("A kért source / SKU nem létezik")),
+    }
   }
 }
 
@@ -232,7 +275,7 @@ impl gzlib::proto::source::source_server::Source for SourceService {
 
   async fn get_all_sources(
     &self,
-    request: Request<()>,
+    _request: Request<()>,
   ) -> Result<Response<Self::GetAllSourcesStream>, Status> {
     // Create channel for stream response
     let (mut tx, rx) = tokio::sync::mpsc::channel(100);
@@ -274,12 +317,25 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     Ok(Response::new(rx))
   }
 
+  type AddPriceInfoStream = tokio::sync::mpsc::Receiver<Result<PriceObject, Status>>;
+
   async fn add_price_info(
     &self,
     request: Request<AddPriceInfoRequest>,
-  ) -> Result<Response<GetPriceInfoHistoryResponse>, Status> {
+  ) -> Result<Response<Self::AddPriceInfoStream>, Status> {
+    // Create channel for stream response
+    let (mut tx, rx) = tokio::sync::mpsc::channel(100);
+
     let res = self.add_price_info(request.into_inner()).await?;
-    Ok(Response::new(res))
+
+    for price in res {
+      tx.send(Ok(price))
+        .await
+        .map_err(|_| Status::internal("Error while sending prices over channel"))?;
+    }
+
+    // Send back the receiver
+    Ok(Response::new(rx))
   }
 
   type GetPriceInfoStream = tokio::sync::mpsc::Receiver<Result<GetPriceInfoResponse, Status>>;
@@ -288,17 +344,42 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     &self,
     request: Request<GetPriceInfoRequest>,
   ) -> Result<Response<Self::GetPriceInfoStream>, Status> {
-    todo!()
+    // Create channel for stream response
+    let (mut tx, rx) = tokio::sync::mpsc::channel(100);
+
+    // Get prices
+    let res = self.get_price_info(request.into_inner()).await?;
+
+    // Send prices over channel
+    for price_info_response in res {
+      tx.send(Ok(price_info_response))
+        .await
+        .map_err(|_| Status::internal("Error while sending prices over channel"))?;
+    }
+
+    // Send back the receiver
+    Ok(Response::new(rx))
   }
 
-  type GetPriceInfoHistoryStream =
-    tokio::sync::mpsc::Receiver<Result<GetPriceInfoHistoryResponse, Status>>;
+  type GetPriceInfoHistoryStream = tokio::sync::mpsc::Receiver<Result<PriceObject, Status>>;
 
   async fn get_price_info_history(
     &self,
     request: Request<GetPriceInfoHistoryRequest>,
   ) -> Result<Response<Self::GetPriceInfoHistoryStream>, Status> {
-    todo!()
+    // Create channel for stream response
+    let (mut tx, rx) = tokio::sync::mpsc::channel(100);
+
+    let res = self.get_price_info_history(request.into_inner()).await?;
+
+    for price in res {
+      tx.send(Ok(price))
+        .await
+        .map_err(|_| Status::internal("Error while sending prices over channel"))?;
+    }
+
+    // Send back the receiver
+    Ok(Response::new(rx))
   }
 }
 
