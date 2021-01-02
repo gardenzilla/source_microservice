@@ -9,7 +9,7 @@ pub struct PriceObject {
   pub net_price: u32,
   pub comment: String,
   pub created_at: DateTime<Utc>,
-  pub created_by: String,
+  pub created_by: u32,
 }
 
 impl Default for PriceObject {
@@ -18,7 +18,7 @@ impl Default for PriceObject {
       net_price: 0,
       comment: "".into(),
       created_at: Utc::now(),
-      created_by: "".into(),
+      created_by: 0,
     }
   }
 }
@@ -27,7 +27,7 @@ impl PriceObject
 where
   Self: Sized,
 {
-  pub fn new(net_price: u32, comment: String, created_by: String) -> Self {
+  pub fn new(net_price: u32, comment: String, created_by: u32) -> Self {
     Self {
       net_price,
       comment,
@@ -44,7 +44,7 @@ pub struct Source {
   pub id: u32,
   pub data: SourceData,
   pub prices: HashMap<u32, Vec<PriceObject>>,
-  pub created_by: String,
+  pub created_by: u32,
   pub created_at: DateTime<Utc>,
 }
 
@@ -54,7 +54,7 @@ impl Default for Source {
       id: 0,
       data: SourceData::default(),
       prices: HashMap::new(),
-      created_by: "".into(),
+      created_by: 0,
       created_at: Utc::now(),
     }
   }
@@ -64,7 +64,7 @@ impl Source
 where
   Self: Sized,
 {
-  pub fn new(id: u32, data: SourceData, created_by: String) -> Self {
+  pub fn new(id: u32, data: SourceData, created_by: u32) -> Self {
     Self {
       id,
       data,
