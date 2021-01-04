@@ -7,6 +7,7 @@ release:
 	strip target/release/source_microservice
 
 build:
+	cargo update
 	cargo build
 
 dev:
