@@ -1,4 +1,3 @@
-ARG package_name=source_microservice
 FROM debian:buster-slim
 WORKDIR /usr/local/bin
 COPY ./target/release/source_microservice /usr/local/bin/source_microservice
