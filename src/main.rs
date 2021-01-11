@@ -284,11 +284,11 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     let res = self.get_all_sources().await?;
 
     // Send the result items through the channel
-    for sobject in res {
-      tx.send(Ok(sobject))
-        .await
-        .map_err(|_| Status::internal("Error while sending sources over channel"))?;
-    }
+    tokio::spawn(async move {
+      for ots in res.into_iter() {
+        tx.send(Ok(ots)).await.unwrap();
+      }
+    });
 
     // Send back the receiver
     Ok(Response::new(rx))
@@ -307,11 +307,11 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     let res = self.get_prices(request.into_inner()).await?;
 
     // Send prices over channel
-    for price_info_response in res {
-      tx.send(Ok(price_info_response))
-        .await
-        .map_err(|_| Status::internal("Error while sending prices over channel"))?;
-    }
+    tokio::spawn(async move {
+      for ots in res.into_iter() {
+        tx.send(Ok(ots)).await.unwrap();
+      }
+    });
 
     // Send back the receiver
     Ok(Response::new(rx))
@@ -328,11 +328,11 @@ impl gzlib::proto::source::source_server::Source for SourceService {
 
     let res = self.add_price_info(request.into_inner()).await?;
 
-    for price in res {
-      tx.send(Ok(price))
-        .await
-        .map_err(|_| Status::internal("Error while sending prices over channel"))?;
-    }
+    tokio::spawn(async move {
+      for ots in res.into_iter() {
+        tx.send(Ok(ots)).await.unwrap();
+      }
+    });
 
     // Send back the receiver
     Ok(Response::new(rx))
@@ -351,11 +351,11 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     let res = self.get_price_info(request.into_inner()).await?;
 
     // Send prices over channel
-    for price_info_response in res {
-      tx.send(Ok(price_info_response))
-        .await
-        .map_err(|_| Status::internal("Error while sending prices over channel"))?;
-    }
+    tokio::spawn(async move {
+      for ots in res.into_iter() {
+        tx.send(Ok(ots)).await.unwrap();
+      }
+    });
 
     // Send back the receiver
     Ok(Response::new(rx))
@@ -372,11 +372,11 @@ impl gzlib::proto::source::source_server::Source for SourceService {
 
     let res = self.get_price_info_history(request.into_inner()).await?;
 
-    for price in res {
-      tx.send(Ok(price))
-        .await
-        .map_err(|_| Status::internal("Error while sending prices over channel"))?;
-    }
+    tokio::spawn(async move {
+      for ots in res.into_iter() {
+        tx.send(Ok(ots)).await.unwrap();
+      }
+    });
 
     // Send back the receiver
     Ok(Response::new(rx))
