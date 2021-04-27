@@ -4,6 +4,7 @@ use packman::*;
 use prelude::{ServiceError, ServiceResult};
 use std::{env, path::PathBuf};
 use tokio::sync::{oneshot, Mutex};
+use tokio_stream::wrappers::ReceiverStream;
 use tonic::{transport::Server, Request, Response, Status};
 
 mod prelude;
@@ -271,7 +272,7 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     Ok(Response::new(res))
   }
 
-  type GetAllSourcesStream = tokio::sync::mpsc::Receiver<Result<SourceObject, Status>>;
+  type GetAllSourcesStream = ReceiverStream<Result<SourceObject, Status>>;
 
   async fn get_all_sources(
     &self,
@@ -291,10 +292,10 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     });
 
     // Send back the receiver
-    Ok(Response::new(rx))
+    Ok(Response::new(ReceiverStream::new(rx)))
   }
 
-  type GetPricesStream = tokio::sync::mpsc::Receiver<Result<GetPriceInfoResponse, Status>>;
+  type GetPricesStream = ReceiverStream<Result<GetPriceInfoResponse, Status>>;
 
   async fn get_prices(
     &self,
@@ -314,10 +315,10 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     });
 
     // Send back the receiver
-    Ok(Response::new(rx))
+    Ok(Response::new(ReceiverStream::new(rx)))
   }
 
-  type AddPriceInfoStream = tokio::sync::mpsc::Receiver<Result<PriceObject, Status>>;
+  type AddPriceInfoStream = ReceiverStream<Result<PriceObject, Status>>;
 
   async fn add_price_info(
     &self,
@@ -335,10 +336,10 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     });
 
     // Send back the receiver
-    Ok(Response::new(rx))
+    Ok(Response::new(ReceiverStream::new(rx)))
   }
 
-  type GetPriceInfoStream = tokio::sync::mpsc::Receiver<Result<GetPriceInfoResponse, Status>>;
+  type GetPriceInfoStream = ReceiverStream<Result<GetPriceInfoResponse, Status>>;
 
   async fn get_price_info(
     &self,
@@ -358,10 +359,10 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     });
 
     // Send back the receiver
-    Ok(Response::new(rx))
+    Ok(Response::new(ReceiverStream::new(rx)))
   }
 
-  type GetPriceInfoHistoryStream = tokio::sync::mpsc::Receiver<Result<PriceObject, Status>>;
+  type GetPriceInfoHistoryStream = ReceiverStream<Result<PriceObject, Status>>;
 
   async fn get_price_info_history(
     &self,
@@ -379,7 +380,7 @@ impl gzlib::proto::source::source_server::Source for SourceService {
     });
 
     // Send back the receiver
-    Ok(Response::new(rx))
+    Ok(Response::new(ReceiverStream::new(rx)))
   }
 }
 
